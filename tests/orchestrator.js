@@ -1,4 +1,6 @@
 import retry from "async-retry";
+import { randomUUID } from "node:crypto";
+import user from "models/user";
 import database from "infra/database";
 import email from "infra/email";
 
@@ -96,7 +98,22 @@ async function runPendingMigrations() {
   return response.json();
 }
 
+function createUserData(overrides = {}) {
+  return {
+    name: "Usuário Exemplo",
+    email: `usuario-${randomUUID()}@example.test`,
+    role: "technician",
+    ...overrides,
+  };
+}
+
+async function createUser(overrides = {}) {
+  return user.create(createUserData(overrides));
+}
+
 const orchestrator = {
+  createUser,
+  createUserData,
   waitForAllServices,
   clearDatabase,
   runPendingMigrations,
