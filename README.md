@@ -263,3 +263,18 @@ o tratamento de erro interno existente.
 Antes de publicar essa alteração, configure o provedor SMTP real na Vercel para
 **Preview** e **Production**, usando as variáveis de e-mail descritas acima.
 Sem essa configuração, os testes remotos indicarão indisponibilidade.
+
+### Página de status e MailCatcher local
+
+`/status` apresenta os dados do banco, a disponibilidade SMTP e a última
+atualização. A consulta é compartilhada entre as seções e se repete a cada
+30 segundos. Falhas de conexão são exibidas sem perder os demais diagnósticos.
+
+No ambiente local, quando `EMAIL_HTTP_URL` está configurada, a API também inclui
+`dependencies.mailcatcher`: disponibilidade HTTP, URL da caixa de entrada e
+quantidade de mensagens capturadas. A consulta usa apenas `GET /messages`.
+Essa dependência é omitida em produção, inclusive nos previews da Vercel.
+
+O MailCatcher usado localmente não informa sua versão nessa API; o campo
+`version` fica `null` e a página exibe “Não informada pelo serviço”. Se sua
+interface HTTP falhar, a API local retorna 503, mesmo se o SMTP estiver disponível.

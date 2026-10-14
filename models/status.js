@@ -1,5 +1,6 @@
 import database from "infra/database";
 import email from "infra/email";
+import mailcatcher from "infra/mailcatcher";
 
 async function getStatus() {
   const updatedAt = new Date().toISOString();
@@ -19,17 +20,20 @@ async function getStatus() {
   const openedConnectionsValue = openedConnectionsResult.rows[0].count;
   const emailStatus = await getEmailStatus();
 
-  return {
-    updated_at: updatedAt,
-    dependencies: {
-      database: {
-        version: formatedVersionValue,
-        max_connections: parseInt(maxConnectionValue),
-        opened_connections: openedConnectionsValue,
-      },
-      email: emailStatus,
+  const dependencies = {
+    database: {
+      version: formatedVersionValue,
+      max_connections: parseInt(maxConnectionValue),
+      opened_connections: openedConnectionsValue,
     },
+    email: emailStatus,
   };
+
+  if (process.env.NODE_ENV !== "production" && process.env.EMAIL_HTTP_URL) {
+    dependencies.mailcatcher = await mailcatcher.getStatus();
+  }
+
+  return { updated_at: updatedAt, dependencies };
 }
 
 async function getEmailStatus() {
