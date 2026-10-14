@@ -177,3 +177,72 @@ Para inspecionar as mensagens após os testes, mantenha `npm run dev` em um
 terminal e execute `npm run test:watch` em outro. As mensagens permanecem
 disponíveis até a próxima execução da suíte de e-mail ou até o MailCatcher ser
 reiniciado, pois sua caixa de entrada é armazenada em memória.
+
+## Testes após o deploy na Vercel
+
+O workflow `Deployed API Tests` aguarda um evento `deployment_status` de sucesso
+criado pela integração da Vercel. Ele testa a URL daquele deploy e publica um
+status no commit correspondente:
+
+- `Smoke / Preview`: verificação da homologação, usada para bloquear o merge.
+- `Smoke / Production`: verificação após a publicação em produção.
+
+A suíte `tests/smoke/` usa Jest e HTTP, com configuração independente do Next.js,
+sem carregar `.env.development`, acessar diretamente o banco ou usar o
+orchestrator local. Atualmente verifica `GET` e `HEAD /api/v1/status`, incluindo
+formato da resposta, atualização recente e informações válidas do PostgreSQL.
+Não exige a versão ou a quantidade de conexões do ambiente local.
+
+Essas verificações detectam falhas na API de status e no acesso ao banco. Não
+comprovam o funcionamento de cadastro, e-mail ou fluxos que ainda não estão
+cobertos. A suíte completa continua rodando no CI; novos fluxos publicados devem
+ganhar testes de homologação conforme forem implementados.
+
+### Ativação no GitHub e na Vercel
+
+1. Publique estes arquivos na branch padrão. A automação executa a versão dos
+   testes dessa branch, para que código de previews não tenha acesso ao segredo
+   de bypass. Mudanças nos smoke tests passam a valer depois do merge.
+2. Se o preview tiver Deployment Protection, crie um segredo em **Vercel →
+   Project Settings → Deployment Protection → Protection Bypass for Automation**.
+   Salve o valor no GitHub em **Settings → Secrets and variables → Actions**, com
+   o nome `VERCEL_AUTOMATION_BYPASS_SECRET`. Não é um token de acesso à conta
+   Vercel. Para deploys públicos, esse segredo é opcional.
+3. Faça um novo deploy de preview e confirme o resultado `Smoke / Preview` no
+   commit do PR. O workflow usa o SHA do deploy, não o último commit de `main`.
+4. Na regra de proteção/ruleset da `main`, mantenha os checks existentes e
+   acrescente **`Smoke / Preview` como obrigatório antes do merge**. Ative também
+   a exigência de branch atualizada. Não marque o job
+   `Verify Vercel deployment` como obrigatório: ele pode ser ignorado enquanto
+   o deploy ainda não terminou. Restrinja bypass da regra conforme a política da
+   equipe. Configure essa exigência somente após ativar e verificar a automação,
+   para não bloquear o PR inicial que a introduz.
+5. Confira as preferências de notificações de falhas do GitHub Actions para as
+   pessoas responsáveis. O workflow fica vermelho em uma falha e fornece logs,
+   resumo e o artefato `smoke-...`, disponível por sete dias. Ele não envia
+   mensagens para Slack/e-mail nem faz rollback automaticamente.
+
+O teste de produção acontece **após** o deploy e verifica sua URL específica.
+Ele não bloqueia a publicação nem verifica automaticamente um domínio próprio,
+seus redirects ou problemas que apareçam horas depois. Monitoramento periódico
+pode ser acrescentado em outra etapa.
+
+### Executar manualmente
+
+Com o servidor local já aberto:
+
+```bash
+TEST_BASE_URL=http://localhost:3000 npm run test:smoke
+```
+
+Para um ambiente publicado, forneça sua origem HTTPS em `TEST_BASE_URL` e, se
+necessário, injete `VERCEL_AUTOMATION_BYPASS_SECRET` no ambiente de execução.
+Não há URL padrão: esquecer a configuração faz o teste falhar. As requisições
+aceitam apenas GET/HEAD e não seguem redirects, evitando enviar o segredo de
+bypass para outro destino. Uma página de login, redirect, erro HTTP, timeout ou
+resposta fora do contrato faz a execução falhar.
+
+Os smoke tests ficam fora de `npm test` e `npm run test:watch`. Eles não executam
+migrations nem limpam dados de homologação ou produção. Antes de adicionar testes
+com escrita em homologação, confirme que o banco de preview está separado do
+banco de produção e reserve dados exclusivos para a automação.
