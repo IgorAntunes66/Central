@@ -76,9 +76,11 @@ export default function StatusPage() {
     <>
       <Head>
         <title>Status dos serviços | Central</title>
+        <meta name="application-name" content="Central" />
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
         <meta
           name="description"
-          content="Acompanhe a disponibilidade dos serviços da aplicação."
+          content="Acompanhe a disponibilidade dos serviços da Central."
         />
       </Head>
       <div className={styles.page}>
@@ -122,7 +124,7 @@ export default function StatusPage() {
         <main className={styles.main}>
           <header className={styles.topbar}>
             <span>
-              <span className={styles.breadcrumb}>Aplicação</span>
+              <span className={styles.breadcrumb}>Central</span>
               <span className={styles.separator}>/</span>Status
             </span>
             <span

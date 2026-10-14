@@ -1,15 +1,19 @@
-# Despacha Fácil[cite: 20]
+# Central
 
-Aplicação web e API desenvolvida em **JavaScript (Node.js/Next.js)** e **PostgreSQL**, estruturada sob princípios de testes contínuos, automação de infraestrutura via Docker e padronização estrita de código[cite: 20].
+Plataforma de gerenciamento de chamados e solicitações para empresas e equipes de atendimento.
+
+[Acessar a Central](https://central-igorantunes66.vercel.app) · [Status dos serviços](https://central-igorantunes66.vercel.app/status)
+
+Aplicação web e API desenvolvida em **JavaScript (Node.js/Next.js)** e **PostgreSQL**, estruturada sob princípios de testes contínuos, automação de infraestrutura via Docker e padronização estrita de código.
 
 ---
 
 ## 🛠️ Tecnologias Utilizadas
 
-- **Runtime & Framework:** Node.js, Next.js e React (JavaScript ES6+)[cite: 20].
-- **Banco de Dados & Infra:** PostgreSQL, Docker e Docker Compose[cite: 20].
-- **Qualidade & Testes:** Jest (testes de integração com orquestrador próprio), ESLint e Prettier[cite: 20].
-- **Controle de Versão & CI:** Git, Husky (hooks de validação e pre-commit), Commitlint (Conventional Commits) e GitHub Actions[cite: 20].
+- **Runtime & Framework:** Node.js, Next.js e React (JavaScript ES6+).
+- **Banco de Dados & Infra:** PostgreSQL, Docker e Docker Compose.
+- **Qualidade & Testes:** Jest (testes de integração com orquestrador próprio), ESLint e Prettier.
+- **Controle de Versão & CI:** Git, Husky (hooks de validação e pre-commit), Commitlint (Conventional Commits) e GitHub Actions.
 
 ---
 
@@ -33,36 +37,30 @@ Aplicação web e API desenvolvida em **JavaScript (Node.js/Next.js)** e **Postg
 │   └── orchestrator.js     # Utilitário para aguardar banco e serviços antes dos testes
 ```
 
-[cite: 20]
-
 ---
 
 ## 🚀 Começando
 
 ### Pré-requisitos
 
-- **Node.js** (versão especificada no `.nvmrc`)[cite: 20].
-- **Docker** e **Docker Compose**[cite: 20].
-- **Git**[cite: 20].
+- **Node.js** (versão especificada no `.nvmrc`).
+- **Docker** e **Docker Compose**.
+- **Git**.
 
 ### 1. Clonar o repositório
 
 ```bash
-git clone https://github.com/igorantunes66/despachafacil.git
-cd despachafacil
+git clone https://github.com/IgorAntunes66/Central.git
+cd Central
 ```
-
-[cite: 20]
 
 ### 2. Configurar variáveis de ambiente
 
-Crie o arquivo de ambiente local com base nas configurações de desenvolvimento[cite: 20]:
+Crie o arquivo de ambiente local com base nas configurações de desenvolvimento:
 
 ```bash
 cp .env.development .env.local
 ```
-
-[cite: 20]
 
 ### 3. Instalar dependências
 
@@ -70,17 +68,13 @@ cp .env.development .env.local
 npm install
 ```
 
-[cite: 20]
-
 ### 4. Inicializar os serviços (Banco de Dados)
 
-Suba os containers do PostgreSQL via Docker Compose[cite: 20]:
+Suba os containers do PostgreSQL via Docker Compose:
 
 ```bash
 docker compose -f infra/compose.yaml up -d
 ```
-
-[cite: 20]
 
 ### 5. Iniciar o servidor de desenvolvimento
 
@@ -88,45 +82,42 @@ docker compose -f infra/compose.yaml up -d
 npm run dev
 ```
 
-[cite: 20]
-Acesse a aplicação em `http://localhost:3000`[cite: 20].
+Acesse a aplicação em `http://localhost:3000`.
 
 ---
 
 ## 📡 Endpoints da API
 
-| Método | Endpoint             | Descrição                                                                                   |
-| ------ | -------------------- | ------------------------------------------------------------------------------------------- |
-| `GET`  | `/api/v1/status`     | Retorna o status operacional do servidor, versão do PostgreSQL e conexões ativas[cite: 20]. |
-| `GET`  | `/api/v1/migrations` | Lista as migrações pendentes no PostgreSQL[cite: 20].                                       |
-| `POST` | `/api/v1/migrations` | Executa as migrações pendentes no banco de dados[cite: 20].                                 |
+| Método | Endpoint             | Descrição                                                                         |
+| ------ | -------------------- | --------------------------------------------------------------------------------- |
+| `GET`  | `/api/v1/status`     | Retorna o status operacional do servidor, versão do PostgreSQL e conexões ativas. |
+| `GET`  | `/api/v1/migrations` | Lista as migrações pendentes no PostgreSQL.                                       |
+| `POST` | `/api/v1/migrations` | Executa as migrações pendentes no banco de dados.                                 |
 
 ---
 
 ## 🧪 Testes e Qualidade de Código
 
-- **Executar suíte de testes:** O Jest executa os testes de integração após o `tests/orchestrator.js` confirmar que o PostgreSQL está pronto para aceitar conexões[cite: 20].
+- **Executar suíte de testes:** O Jest executa os testes de integração após o `tests/orchestrator.js` confirmar que o PostgreSQL está pronto para aceitar conexões.
+
   ```bash
   npm test
   ```
 
-[cite: 20]
-
 - **Verificação de código e formatação:** Valida as regras do ESLint e do Prettier.
+
   ```bash
   npm run lint:eslint:check
   npm run lint:prettier:check
   ```
 
-[cite: 20]
-
-- **Padrão de commits:** O projeto força o padrão Conventional Commits validado via Husky e Commitlint antes de cada confirmação[cite: 20].
+- **Padrão de commits:** O projeto força o padrão Conventional Commits validado via Husky e Commitlint antes de cada confirmação.
 
 ---
 
 ## 📄 Licença
 
-Este projeto está sob a licença definida no arquivo [LICENSE](LICENSE)[cite: 20].
+Este projeto está sob a licença definida no arquivo [LICENSE](LICENSE).
 
 ## E-mail em desenvolvimento
 
