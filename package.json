@@ -1,14 +1,14 @@
 {
-  "name": "despachafacil",
+  "name": "central",
   "version": "1.0.0",
-  "description": "Plataforma SaaS para Despachantes",
-  "homepage": "https://github.com/IgorAntunes66/DespachaFacil#readme",
+  "description": "Plataforma de gerenciamento de chamados e solicitações",
+  "homepage": "https://central-igorantunes66.vercel.app",
   "bugs": {
-    "url": "https://github.com/IgorAntunes66/DespachaFacil/issues"
+    "url": "https://github.com/IgorAntunes66/Central/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/IgorAntunes66/DespachaFacil.git"
+    "url": "git+https://github.com/IgorAntunes66/Central.git"
   },
   "license": "MIT",
   "author": "",
