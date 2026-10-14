@@ -1,0 +1,81 @@
+name: Deployed API Tests
+
+on: deployment_status
+
+permissions:
+  contents: read
+  statuses: write
+
+jobs:
+  smoke:
+    name: Verify Vercel deployment
+    if: >-
+      github.event.deployment_status.state == 'success' &&
+      github.event.deployment.creator.login == 'vercel[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      TEST_BASE_URL: ${{ github.event.deployment_status.environment_url }}
+      SMOKE_CONTEXT: ${{ (github.event.deployment.production_environment || github.event.deployment.environment == 'Production') && 'Smoke / Production' || 'Smoke / Preview' }}
+
+    steps:
+      - name: Mark deployment verification as pending
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.repos.createCommitStatus({
+              ...context.repo,
+              sha: context.payload.deployment.sha,
+              state: 'pending',
+              context: process.env.SMOKE_CONTEXT,
+              description: 'Verificando a API publicada na Vercel.',
+              target_url: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+            });
+
+      # Use reviewed tests; preview code must not receive the bypass secret.
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "26.5.0"
+          cache: "npm"
+
+      - run: npm ci --ignore-scripts
+
+      - name: Test deployed API
+        env:
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+        run: npm run test:smoke -- --json --outputFile=smoke-results.json
+
+      - name: Save test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-${{ github.event.deployment.id }}-${{ github.run_attempt }}
+          path: smoke-results.json
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Publish deployment verification result
+        if: always()
+        uses: actions/github-script@v7
+        env:
+          JOB_STATUS: ${{ job.status }}
+        with:
+          script: |
+            const passed = process.env.JOB_STATUS === 'success';
+            await github.rest.repos.createCommitStatus({
+              ...context.repo,
+              sha: context.payload.deployment.sha,
+              state: passed ? 'success' : 'failure',
+              context: process.env.SMOKE_CONTEXT,
+              description: passed ? 'API publicada verificada.' : 'Falha ao verificar a API publicada. Consulte os logs.',
+              target_url: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+            });
+            await core.summary
+              .addHeading(process.env.SMOKE_CONTEXT)
+              .addRaw(passed ? 'Verificação aprovada.' : 'Verificação falhou. Consulte os testes e o artefato desta execução.')
+              .write();

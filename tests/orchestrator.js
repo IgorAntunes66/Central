@@ -85,9 +85,21 @@ async function clearDatabase() {
   await database.query("drop schema public cascade; create schema public");
 }
 
+async function runPendingMigrations() {
+  const response = await fetch("http://localhost:3000/api/v1/migrations", {
+    method: "POST",
+    signal: AbortSignal.timeout(10000),
+  });
+  if (!response.ok) {
+    throw new Error(`Migrations returned status ${response.status}.`);
+  }
+  return response.json();
+}
+
 const orchestrator = {
   waitForAllServices,
   clearDatabase,
+  runPendingMigrations,
   waitForMailServer,
   deleteAllEmails,
   getLastEmail,

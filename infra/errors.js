@@ -35,3 +35,39 @@ export class MethodNotAllowedError extends Error {
     };
   }
 }
+
+export class ValidationError extends Error {
+  constructor({ message = "Os dados informados são inválidos.", cause } = {}) {
+    super(message, { cause });
+    this.name = "ValidationError";
+    this.action = "Corrija os dados informados e tente novamente.";
+    this.statusCode = 400;
+  }
+
+  toJSON() {
+    return {
+      name: this.name,
+      message: this.message,
+      action: this.action,
+      status_code: this.statusCode,
+    };
+  }
+}
+
+export class ConflictError extends Error {
+  constructor({ message = "O recurso informado já existe.", cause } = {}) {
+    super(message, { cause });
+    this.name = "ConflictError";
+    this.action = "Informe dados que ainda não estejam cadastrados.";
+    this.statusCode = 409;
+  }
+
+  toJSON() {
+    return {
+      name: this.name,
+      message: this.message,
+      action: this.action,
+      status_code: this.statusCode,
+    };
+  }
+}

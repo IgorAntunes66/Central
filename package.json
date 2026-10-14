@@ -21,6 +21,7 @@
     "test": "npm run services:up && concurrently -n next,jest --hide next -k -s command-jest \"next dev\" \"jest --runInBand --verbose\"",
     "posttest": "npm run services:stop",
     "test:watch": "jest --watchAll --runInBand --verbose",
+    "test:smoke": "node --experimental-vm-modules node_modules/jest/bin/jest.js --config jest.smoke.config.js --runInBand --verbose",
     "services:up": "docker compose -f infra/compose.yaml up -d",
     "services:stop": "docker compose -f infra/compose.yaml stop",
     "services:down": "docker compose -f infra/compose.yaml down",
@@ -44,7 +45,8 @@
     "pg": "8.23.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
-    "swr": "^2.5.1"
+    "swr": "^2.5.1",
+    "validator": "13.15.35"
   },
   "devDependencies": {
     "@commitlint/cli": "21.2.2",

@@ -1,5 +1,10 @@
 import controller from "infra/controller";
-import { InternalServerError, MethodNotAllowedError } from "infra/errors";
+import {
+  InternalServerError,
+  MethodNotAllowedError,
+  ValidationError,
+  ConflictError,
+} from "infra/errors";
 
 afterEach(() => {
   jest.restoreAllMocks();
@@ -34,15 +39,18 @@ describe("Controller error handler", () => {
     expect(logger).toHaveBeenCalledWith(publicError);
   });
 
-  test("Preserving a recognized error without logging an internal failure", () => {
-    const error = new MethodNotAllowedError();
-    const response = createResponse();
-    const logger = jest.spyOn(console, "error").mockImplementation(() => {});
+  test.each([MethodNotAllowedError, ValidationError, ConflictError])(
+    "Preserving %p without logging an internal failure",
+    (ErrorClass) => {
+      const error = new ErrorClass();
+      const response = createResponse();
+      const logger = jest.spyOn(console, "error").mockImplementation(() => {});
 
-    controller.errorHandlers.onError(error, {}, response);
+      controller.errorHandlers.onError(error, {}, response);
 
-    expect(response.status).toHaveBeenCalledWith(405);
-    expect(response.json).toHaveBeenCalledWith(error);
-    expect(logger).not.toHaveBeenCalled();
-  });
+      expect(response.status).toHaveBeenCalledWith(error.statusCode);
+      expect(response.json).toHaveBeenCalledWith(error);
+      expect(logger).not.toHaveBeenCalled();
+    },
+  );
 });
