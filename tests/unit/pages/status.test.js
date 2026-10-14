@@ -27,9 +27,10 @@ describe("Status page", () => {
     useSWR.mockReturnValue({ data, isLoading: false });
     const html = renderToStaticMarkup(<StatusPage />);
 
-    expect(html).toContain("Conexão SMTP: Disponível");
-    expect(html).toContain("Interface HTTP: Disponível");
-    expect(html).toContain("Mensagens capturadas: 0");
+    expect(html).toContain("Tudo funcionando por aqui.");
+    expect(html).toContain("Interface HTTP");
+    expect(html).toContain("Mensagens capturadas");
+    expect(html).toContain("<dd>0</dd>");
     expect(html).toContain("Não informada pelo serviço");
     expect(html).toContain('href="http://127.0.0.1:1080"');
   });
@@ -43,8 +44,10 @@ describe("Status page", () => {
     });
     const html = renderToStaticMarkup(<StatusPage />);
 
-    expect(html).toContain("Conexão SMTP: Indisponível");
-    expect(html).toContain("Conexões máximas: 100");
+    expect(html).toContain("Um serviço precisa de atenção.");
+    expect(html).toContain("<dd>Indisponível</dd>");
+    expect(html).toContain("Conexões máximas");
+    expect(html).toContain("<dd>100</dd>");
   });
 
   test("Omits the local section when MailCatcher is absent", () => {
@@ -68,5 +71,37 @@ describe("Status page", () => {
     expect(renderToStaticMarkup(<StatusPage />)).toContain(
       "Não foi possível consultar o status dos serviços.",
     );
+  });
+
+  test("Does not report stale service data as currently available", () => {
+    useSWR.mockReturnValue({
+      data,
+      error: new Error("Connection failed"),
+      isLoading: false,
+    });
+    const html = renderToStaticMarkup(<StatusPage />);
+
+    expect(html).toContain("última consulta válida");
+    expect(html).toContain("Não verificado");
+    expect(html).not.toContain("Tudo funcionando por aqui.");
+    expect(html).not.toContain("<dd>Disponível</dd>");
+  });
+
+  test("Keeps the page visible and disables refresh while checking", () => {
+    useSWR.mockReturnValue({ data, isLoading: false, isValidating: true });
+    const html = renderToStaticMarkup(<StatusPage />);
+
+    expect(html).toContain("Atualizando…");
+    expect(html).toContain('disabled=""');
+    expect(html).toContain("PostgreSQL 18");
+  });
+
+  test("Shows the initial loading state without reporting healthy services", () => {
+    useSWR.mockReturnValue({ isLoading: true, isValidating: true });
+    const html = renderToStaticMarkup(<StatusPage />);
+
+    expect(html).toContain("Consultando os serviços…");
+    expect(html).toContain("Carregando...");
+    expect(html).not.toContain("Operacional");
   });
 });
