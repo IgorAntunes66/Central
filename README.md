@@ -187,7 +187,9 @@ Não exige a versão ou a quantidade de conexões do ambiente local.
 
 Essas verificações detectam falhas na API de status, no acesso ao banco e na
 conexão SMTP. Não comprovam o funcionamento de cadastro, entrega de e-mail ou fluxos que ainda não estão
-cobertos. A suíte completa continua rodando no CI; novos fluxos publicados devem
+cobertos. Também verifica a página de primeiro acesso com um token desconhecido e a
+rejeição de HEAD no endpoint de aceitação, sem alterações no banco.
+A suíte completa continua rodando no CI; novos fluxos publicados devem
 ganhar testes de homologação conforme forem implementados.
 
 ### Ativação no GitHub e na Vercel
@@ -269,3 +271,51 @@ Essa dependência é omitida em produção, inclusive nos previews da Vercel.
 O MailCatcher usado localmente não informa sua versão nessa API; o campo
 `version` fica `null` e a página exibe “Não informada pelo serviço”. Se sua
 interface HTTP falhar, a API local retorna 503, mesmo se o SMTP estiver disponível.
+
+## Convites de primeiro acesso
+
+`models/invitation/notification.send(userId)` gera um convite para um usuário com
+situação `invited` e envia o link para seu e-mail cadastrado. O convite vale por 24
+horas, possui uso único e substitui qualquer convite anterior ainda não utilizado.
+O banco armazena somente o hash do token; o retorno do envio contém apenas os
+identificadores e a validade, sem o token.
+
+Configure `APP_BASE_URL` com a origem da aplicação. Localmente, usamos
+`http://localhost:3000`. Em Production na Vercel, configure a origem HTTPS oficial.
+Em Preview, sem APP_BASE_URL, o envio usa VERCEL_BRANCH_URL (ou VERCEL_URL) com
+HTTPS. As variáveis de sistema devem estar habilitadas na Vercel. A origem não
+deve conter caminho, parâmetros,
+fragmento ou credenciais. O link aponta para `/primeiro-acesso`, onde o usuário define e confirma a senha.
+A página consulta a validade do convite, não é armazenada em cache e não envia o
+token no cabeçalho de referência. Após a ativação, remove o token do endereço.
+O login e as sessões serão implementados na próxima etapa.
+
+A confirmação do envio significa aceitação pelo SMTP, não entrega na caixa do
+destinatário. Uma falha SMTP é propagada ao chamador; o usuário continua aguardando
+o primeiro acesso. Uma nova tentativa de envio gera outro token e invalida o
+convite anterior. Não há reenvio automático.
+
+### Aceitação do convite
+
+`POST /api/v1/invitations/accept` recebe um objeto JSON com `token` e `password`.
+Um convite válido ativa o usuário e retorna seus dados públicos com status 200,
+sem retornar o hash da senha ou criar uma sessão. Token inválido, expirado ou já
+utilizado e senha inválida retornam 400 no padrão `ValidationError`. A resposta
+não pode ser armazenada em cache. Outros métodos retornam 405 com `Allow: POST`.
+
+### Publicação e validação do primeiro acesso
+
+O build da Vercel aplica as migrations pendentes usando a configuração de banco
+do próprio deploy, antes de gerar a aplicação. Uma falha interrompe o build.
+Localmente, as migrations continuam sendo aplicadas pelo fluxo de desenvolvimento.
+
+Configure o segredo `PREVIEW_DATABASE_URL` no GitHub Actions com a conexão do
+banco **separado de homologação**. A verificação cria usuários temporários com
+e-mails `preview-...@example.test`, testa a definição da senha e a expiração do
+convite, e remove somente seus próprios usuários ao terminar. A suíte exige
+`TEST_DEPLOYMENT_ENV=preview`, não envia e-mails e não roda em produção.
+
+O workflow `First access in Preview` verifica o deploy exato do PR. Após a
+publicação destes arquivos na branch padrão, o status obrigatório
+`Smoke / Preview` também inclui essa validação, sempre usando a versão revisada
+dos testes da branch padrão. `Smoke / Production` permanece somente de leitura.
