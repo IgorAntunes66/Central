@@ -16,5 +16,8 @@ export default router.handler({
 
 async function getHandler(request, response) {
   const result = await statusModel.getStatus();
+  if (!result.dependencies.email.connected) {
+    return response.status(503).json(result);
+  }
   return response.status(200).json(result);
 }

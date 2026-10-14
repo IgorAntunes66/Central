@@ -1,4 +1,5 @@
 import database from "infra/database";
+import email from "infra/email";
 
 async function getStatus() {
   const updatedAt = new Date().toISOString();
@@ -16,6 +17,7 @@ async function getStatus() {
     values: [databaseName],
   });
   const openedConnectionsValue = openedConnectionsResult.rows[0].count;
+  const emailStatus = await getEmailStatus();
 
   return {
     updated_at: updatedAt,
@@ -25,8 +27,18 @@ async function getStatus() {
         max_connections: parseInt(maxConnectionValue),
         opened_connections: openedConnectionsValue,
       },
+      email: emailStatus,
     },
   };
+}
+
+async function getEmailStatus() {
+  try {
+    await email.verifyConnection();
+    return { connected: true };
+  } catch {
+    return { connected: false };
+  }
 }
 
 export default { getStatus };

@@ -190,11 +190,12 @@ status no commit correspondente:
 A suíte `tests/smoke/` usa Jest e HTTP, com configuração independente do Next.js,
 sem carregar `.env.development`, acessar diretamente o banco ou usar o
 orchestrator local. Atualmente verifica `GET` e `HEAD /api/v1/status`, incluindo
-formato da resposta, atualização recente e informações válidas do PostgreSQL.
+formato da resposta, atualização recente, informações válidas do PostgreSQL e
+disponibilidade do SMTP.
 Não exige a versão ou a quantidade de conexões do ambiente local.
 
-Essas verificações detectam falhas na API de status e no acesso ao banco. Não
-comprovam o funcionamento de cadastro, e-mail ou fluxos que ainda não estão
+Essas verificações detectam falhas na API de status, no acesso ao banco e na
+conexão SMTP. Não comprovam o funcionamento de cadastro, entrega de e-mail ou fluxos que ainda não estão
 cobertos. A suíte completa continua rodando no CI; novos fluxos publicados devem
 ganhar testes de homologação conforme forem implementados.
 
@@ -246,3 +247,19 @@ Os smoke tests ficam fora de `npm test` e `npm run test:watch`. Eles não execut
 migrations nem limpam dados de homologação ou produção. Antes de adicionar testes
 com escrita em homologação, confirme que o banco de preview está separado do
 banco de produção e reserve dados exclusivos para a automação.
+
+### E-mail no diagnóstico de status
+
+`GET /api/v1/status` inclui `dependencies.email.connected`. A verificação usa
+`infra/email.verifyConnection()` e não envia mensagens: confirma a conexão SMTP,
+TLS e autenticação quando configurados, mas não garante a entrega ao destinatário
+nem que o provedor aceitará o remetente.
+
+Com o SMTP disponível, a API responde 200. Se a verificação SMTP falhar,
+responde 503, com `connected: false`, preservando as informações do banco e sem
+expor credenciais ou detalhes do servidor SMTP. Falhas do banco continuam seguindo
+o tratamento de erro interno existente.
+
+Antes de publicar essa alteração, configure o provedor SMTP real na Vercel para
+**Preview** e **Production**, usando as variáveis de e-mail descritas acima.
+Sem essa configuração, os testes remotos indicarão indisponibilidade.

@@ -2,7 +2,7 @@ import { describe, expect, test } from "@jest/globals";
 import smoke from "./request.js";
 
 describe("Deployed API /api/v1/status", () => {
-  test("Returns current status and valid database information", async () => {
+  test("Returns current status with available database and email services", async () => {
     const requestedAt = Date.now();
     const response = await smoke.request("/api/v1/status");
 
@@ -23,6 +23,7 @@ describe("Deployed API /api/v1/status", () => {
     expect(database.max_connections).toBeGreaterThan(0);
     expect(Number.isInteger(database.opened_connections)).toBe(true);
     expect(database.opened_connections).toBeGreaterThanOrEqual(0);
+    expect(body.dependencies.email).toEqual({ connected: true });
   });
 
   test("Accepts HEAD without a response body", async () => {
