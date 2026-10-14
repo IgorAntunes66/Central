@@ -23,6 +23,19 @@ describe("GET /api/v1/status", () => {
       expect(responseBody.dependencies.database.max_connections).toBe(100);
       expect(responseBody.dependencies.database.opened_connections).toBe(1);
       expect(responseBody.dependencies.email).toEqual({ connected: true });
+      expect(responseBody.dependencies.mailcatcher).toMatchObject({
+        connected: true,
+        web_url: process.env.EMAIL_HTTP_URL,
+        version: null,
+      });
+      expect(
+        Number.isInteger(
+          responseBody.dependencies.mailcatcher.captured_messages,
+        ),
+      ).toBe(true);
+      expect(
+        responseBody.dependencies.mailcatcher.captured_messages,
+      ).toBeGreaterThanOrEqual(0);
     });
 
     test("Checking SMTP availability without sending an email", async () => {
