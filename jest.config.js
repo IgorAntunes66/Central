@@ -12,7 +12,10 @@ const createJestConfig = nextJest({
 const jestConfig = createJestConfig({
   moduleDirectories: ["node_modules", "<rootDir>"],
   testTimeout: 60000,
-  testPathIgnorePatterns: ["<rootDir>/tests/smoke/"],
+  testPathIgnorePatterns: [
+    "<rootDir>/tests/smoke/",
+    "<rootDir>/tests/preview/",
+  ],
 });
 
 export default createJestConfig(jestConfig);

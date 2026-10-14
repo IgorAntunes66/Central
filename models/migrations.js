@@ -1,6 +1,6 @@
 import { runner as migrationRunner } from "node-pg-migrate";
 import { join } from "node:path";
-import database from "infra/database";
+import database from "../infra/database.js";
 
 async function listPendingMigrations() {
   return runMigrations({ dryRun: true });

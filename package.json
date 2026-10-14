@@ -32,7 +32,9 @@
     "lint:prettier:fix": "prettier . --write",
     "lint:eslint:check": "eslint .",
     "prepare": "husky",
-    "commit": "cz"
+    "commit": "cz",
+    "build": "node infra/scripts/migrate-deployment.js && next build",
+    "test:preview": "node --experimental-vm-modules node_modules/jest/bin/jest.js --config jest.preview.config.js --runInBand --verbose"
   },
   "dependencies": {
     "async-retry": "1.3.3",

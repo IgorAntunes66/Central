@@ -50,6 +50,14 @@ jobs:
           VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
         run: npm run test:smoke -- --json --outputFile=smoke-results.json
 
+      - name: Test first access in the isolated Preview database
+        if: env.SMOKE_CONTEXT == 'Smoke / Preview' && hashFiles('jest.preview.config.js') != ''
+        env:
+          TEST_DEPLOYMENT_ENV: preview
+          PREVIEW_DATABASE_URL: ${{ secrets.PREVIEW_DATABASE_URL }}
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+        run: npm run test:preview
+
       - name: Save test results
         if: always()
         uses: actions/upload-artifact@v4

@@ -1,0 +1,57 @@
+name: First access in Preview
+
+on: pull_request
+
+permissions:
+  contents: read
+  deployments: read
+
+jobs:
+  first-access:
+    name: First access Preview
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "26.5.0"
+          cache: "npm"
+      - run: npm ci
+      - name: Wait for the Preview deployment of this commit
+        id: deployment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const sha = context.payload.pull_request.head.sha;
+            const deadline = Date.now() + 8 * 60 * 1000;
+            while (Date.now() < deadline) {
+              const { data: deployments } = await github.rest.repos.listDeployments({
+                ...context.repo, sha, per_page: 20,
+              });
+              for (const deployment of deployments) {
+                if (deployment.creator?.login !== 'vercel[bot]' || deployment.production_environment || deployment.environment === 'Production') continue;
+                const { data: statuses } = await github.rest.repos.listDeploymentStatuses({
+                  ...context.repo, deployment_id: deployment.id, per_page: 1,
+                });
+                if (statuses[0]?.state === 'success') {
+                  core.setOutput('url', statuses[0].environment_url);
+                  return;
+                }
+                if (['error', 'failure'].includes(statuses[0]?.state)) {
+                  throw new Error('O deploy de Preview falhou.');
+                }
+              }
+              await new Promise(resolve => setTimeout(resolve, 15000));
+            }
+            throw new Error('O Preview deste commit não ficou disponível a tempo.');
+      - name: Test the first-access flow with temporary Preview data
+        env:
+          TEST_DEPLOYMENT_ENV: preview
+          TEST_BASE_URL: ${{ steps.deployment.outputs.url }}
+          PREVIEW_DATABASE_URL: ${{ secrets.PREVIEW_DATABASE_URL }}
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+        run: npm run test:preview
