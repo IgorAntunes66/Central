@@ -10,6 +10,23 @@ async function query(queryObject) {
   }
 }
 
+async function transaction(callback) {
+  const client = await getNewClient();
+  try {
+    await client.query("BEGIN");
+    try {
+      const result = await callback(client);
+      await client.query("COMMIT");
+      return result;
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    }
+  } finally {
+    await client.end();
+  }
+}
+
 async function getNewClient() {
   const client = new Client({
     host: process.env.POSTGRES_HOST,
@@ -26,6 +43,7 @@ async function getNewClient() {
 const database = {
   query,
   getNewClient,
+  transaction,
 };
 
 export default database;
