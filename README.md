@@ -187,7 +187,9 @@ Não exige a versão ou a quantidade de conexões do ambiente local.
 
 Essas verificações detectam falhas na API de status, no acesso ao banco e na
 conexão SMTP. Não comprovam o funcionamento de cadastro, entrega de e-mail ou fluxos que ainda não estão
-cobertos. A suíte completa continua rodando no CI; novos fluxos publicados devem
+cobertos. Também verifica a página de primeiro acesso com um token desconhecido e a
+rejeição de HEAD no endpoint de aceitação, sem alterações no banco.
+A suíte completa continua rodando no CI; novos fluxos publicados devem
 ganhar testes de homologação conforme forem implementados.
 
 ### Ativação no GitHub e na Vercel
